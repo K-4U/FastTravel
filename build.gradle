@@ -1,0 +1,90 @@
+
+buildscript {
+    repositories {
+        jcenter()
+        maven {
+            name = "forge"
+            url = "http://files.minecraftforge.net/maven"
+        }
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT'
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle.forge'
+
+repositories {
+    maven {
+        name "K4Repo"
+        url "http://maven.k-4u.nl"
+    }
+}
+
+
+dependencies {
+    compile "k4unl:k4lib:1.8.8-1.0.3:deobf"
+}
+
+project.ext {
+    buildNum = System.getenv("BUILD_NUMBER")
+    mcVersion="1.8.8"
+}
+
+version = project.ext.mcVersion + "-1.0." + project.ext.buildNum
+group= "k4unl.minecraft.fastTravel" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+archivesBaseName = "fastTravel"
+
+
+
+minecraft {
+    version = "${project.ext.mcVersion}-11.15.0.1641-${project.ext.mcVersion}"
+    replace "@VERSION@", project.version
+    replace "@BUILDNUM@", project.ext.buildNum
+
+    mappings = "snapshot_20151122"
+
+    runDir = "../Minecraft/"
+}
+
+// configure the source folders
+sourceSets {
+    main {
+        java {
+            srcDir 'src'
+                // exclude 'some exclusion'
+                // include 'some inclusion'
+        }
+        resources {
+            srcDir 'resources'
+                exclude '**/.md' // exclude readme from localization repo
+                // exclude 'some exclusion'
+                // include 'some inclusion'
+        }
+    }
+}
+
+processResources
+{
+    // this will ensure that this task is redone when the versions change.
+    inputs.property "version", project.version
+    inputs.property "mcversion", project.minecraft.version
+
+    // replace stuff in mcmod.info, nothing else
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+                
+        // replace version and mcversion
+        expand 'version':project.version, 'mcversion':project.minecraft.version
+    }
+        
+    // copy everything else, thats not the mcmod.info
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
+}
+
+jar {
+    classifier = "universal"
+}
+
