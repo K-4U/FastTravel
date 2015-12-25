@@ -7,7 +7,7 @@ import k4unl.minecraft.k4lib.commands.CommandK4Base;
 import k4unl.minecraft.k4lib.lib.Functions;
 import k4unl.minecraft.k4lib.lib.Location;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.util.BlockPos;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.common.DimensionManager;
@@ -42,14 +42,14 @@ public class CommandFastTravel extends CommandK4Base {
             if (args[0].toLowerCase().equals("version")) {
                 sender.addChatMessage(new ChatComponentText("Fast Travel version " + ModInfo.VERSION));
             } else if (args[0].toLowerCase().equals("save")) {
-                if (Functions.isPlayerOpped(sender.getCommandSenderName())) {
+                if (Functions.isPlayerOpped(((EntityPlayerMP)sender).getGameProfile())) {
                     Users.saveToFile(DimensionManager.getCurrentSaveRootDirectory());
                     FastTravel.instance.saveLocationsToFile(DimensionManager.getCurrentSaveRootDirectory());
 
                     sender.addChatMessage(new ChatComponentText("Locations and user settings saved to world dir!"));
                 }
             } else if (args[0].toLowerCase().equals("load")) {
-                if (Functions.isPlayerOpped(sender.getCommandSenderName())) {
+                if (Functions.isPlayerOpped(((EntityPlayerMP)sender).getGameProfile())) {
                     Users.readFromFile(DimensionManager.getCurrentSaveRootDirectory());
                     FastTravel.instance.readLocationsFile(DimensionManager.getCurrentSaveRootDirectory());
 
@@ -65,14 +65,14 @@ public class CommandFastTravel extends CommandK4Base {
                 }
             } else if (args[0].toLowerCase().equals("set")) {
                 if (args.length == 2) {
-                    FastTravel.instance.locations.put(args[1], new Location(sender.getPosition()));
+                    FastTravel.instance.locations.put(args[1], new Location(sender.getPlayerCoordinates()));
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "Location " + args[1] + " saved!"));
                 } else {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /fasttravel set <name>"));
                 }
             } else if (args[0].toLowerCase().equals("setprivate")) {
                 if (args.length == 2) {
-                    Users.getUserByName(sender.getCommandSenderName()).addLocation(args[1], new Location(sender.getPosition()));
+                    Users.getUserByName(sender.getCommandSenderName()).addLocation(args[1], new Location(sender.getPlayerCoordinates()));
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "Location " + args[1] + " saved!"));
                 } else {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /fasttravel setprivate <name>"));
@@ -105,9 +105,8 @@ public class CommandFastTravel extends CommandK4Base {
         }
     }
 
-
     @Override
-    public List addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
+    public List addTabCompletionOptions(ICommandSender sender, String[] args) {
 
         List<String> ret = new ArrayList<String>();
 

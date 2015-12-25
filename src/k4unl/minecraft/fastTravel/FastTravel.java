@@ -3,6 +3,8 @@ package k4unl.minecraft.fastTravel;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import cpw.mods.fml.common.Mod;
+import cpw.mods.fml.common.event.*;
 import k4unl.minecraft.fastTravel.commands.Commands;
 import k4unl.minecraft.fastTravel.lib.Log;
 import k4unl.minecraft.fastTravel.lib.Users;
@@ -11,8 +13,6 @@ import k4unl.minecraft.fastTravel.lib.config.ModInfo;
 import k4unl.minecraft.k4lib.lib.Location;
 import k4unl.minecraft.k4lib.lib.config.ConfigHandler;
 import net.minecraftforge.common.DimensionManager;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.event.*;
 
 import java.io.*;
 import java.lang.reflect.Type;
