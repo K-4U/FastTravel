@@ -1,6 +1,8 @@
 package k4unl.minecraft.fastTravel.commands;
 
+import com.google.common.base.Joiner;
 import k4unl.minecraft.fastTravel.FastTravel;
+import k4unl.minecraft.fastTravel.lib.Log;
 import k4unl.minecraft.fastTravel.lib.Users;
 import k4unl.minecraft.fastTravel.lib.config.FastTravelConfig;
 import k4unl.minecraft.fastTravel.lib.config.ModInfo;
@@ -61,6 +63,11 @@ public class CommandFastTravel extends CommandK4Base {
     public void processCommand(ICommandSender sender, String[] args) {
 
         if (args.length >= 1) {
+            List<String> args_ = new ArrayList<String>();
+            Collections.addAll(args_, args);
+
+            args_.remove(args[0]);
+            String tag = Joiner.on(" ").join(args_);
             if (args[0].toLowerCase().equals("version")) {
                 sender.addChatMessage(new ChatComponentText("Fast Travel version " + ModInfo.VERSION));
             } else if (args[0].toLowerCase().equals("save")) {
@@ -92,17 +99,17 @@ public class CommandFastTravel extends CommandK4Base {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "You do not have permission to use this command."));
                     return;
                 }
-                if (args.length == 2) {
-                    FastTravel.instance.locations.put(args[1], new Location(sender.getPosition()));
-                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "Location " + args[1] + " saved!"));
+                if (args.length >= 2) {
+                    FastTravel.instance.locations.put(tag, new Location(sender.getPosition()));
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "Location " + tag + " saved!"));
                 } else {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /fasttravel set <name>"));
                 }
             } else if (args[0].toLowerCase().equals("setprivate")) {
                 if(FastTravelConfig.INSTANCE.getBool("enablePrivateList")) {
-                    if (args.length == 2) {
-                        Users.getUserByName(sender.getCommandSenderName()).addLocation(args[1], new Location(sender.getPosition()));
-                        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "Location " + args[1] + " saved!"));
+                    if (args.length >= 2) {
+                        Users.getUserByName(sender.getCommandSenderName()).addLocation(tag, new Location(sender.getPosition()));
+                        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "Location " + tag + " saved!"));
                     } else {
                         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /fasttravel setprivate <name>"));
                     }
@@ -112,9 +119,9 @@ public class CommandFastTravel extends CommandK4Base {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "You do not have permission to use this command."));
                     return;
                 }
-                if (args.length == 2) {
-                    if (FastTravel.instance.locations.containsKey(args[1])) {
-                        FastTravel.instance.locations.remove(args[1]);
+                if (args.length >= 2) {
+                    if (FastTravel.instance.locations.containsKey(tag)) {
+                        FastTravel.instance.locations.remove(tag);
                         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "Location removed"));
                     } else {
                         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "This location does not exist"));
@@ -124,9 +131,9 @@ public class CommandFastTravel extends CommandK4Base {
                 }
             } else if (args[0].toLowerCase().equals("delprivate")) {
                 if(FastTravelConfig.INSTANCE.getBool("enablePrivateList")) {
-                    if (args.length == 2) {
-                        if (Users.getUserByName(sender.getCommandSenderName()).getLocations().containsKey(args[1])) {
-                            Users.getUserByName(sender.getCommandSenderName()).removeLocation(args[1]);
+                    if (args.length >= 2) {
+                        if (Users.getUserByName(sender.getCommandSenderName()).getLocations().containsKey(tag)) {
+                            Users.getUserByName(sender.getCommandSenderName()).removeLocation(tag);
                             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "Location removed"));
                         } else {
                             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "This location does not exist"));

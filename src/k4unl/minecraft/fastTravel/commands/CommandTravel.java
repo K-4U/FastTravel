@@ -1,5 +1,6 @@
 package k4unl.minecraft.fastTravel.commands;
 
+import com.google.common.base.Joiner;
 import k4unl.minecraft.fastTravel.FastTravel;
 import k4unl.minecraft.fastTravel.lib.config.FastTravelConfig;
 import k4unl.minecraft.k4lib.commands.CommandK4Base;
@@ -40,12 +41,14 @@ public class CommandTravel extends CommandK4Base {
     public void processCommand(ICommandSender sender, String[] args) {
 
         if (args.length == 1) {
-            if (FastTravel.instance.locations.containsKey(args[0])) {
+            String tag = Joiner.on(" ").join(args);
+            
+            if (FastTravel.instance.locations.containsKey(tag)) {
                 if (FastTravelConfig.INSTANCE.getBool("useExperienceOnTravel")) {
                     Location startLocation = new Location((EntityPlayer) sender.getCommandSenderEntity());
-                    int distance = startLocation.getDifference(FastTravel.instance.locations.get(args[0]));
+                    int distance = startLocation.getDifference(FastTravel.instance.locations.get(tag));
                     int experienceCost = (int)(FastTravelConfig.INSTANCE.getDouble("experienceMultiplier") * distance);
-                    if (startLocation.getDimension() != FastTravel.instance.locations.get(args[0]).getDimension()) {
+                    if (startLocation.getDimension() != FastTravel.instance.locations.get(tag).getDimension()) {
                         experienceCost += FastTravelConfig.INSTANCE.getInt("experienceUsageDimensionTravel");
                     }
 
@@ -61,7 +64,7 @@ public class CommandTravel extends CommandK4Base {
                     Functions.addPlayerXP(player, experienceCost);
                 }
 
-                TeleportHelper.teleportEntity(sender.getCommandSenderEntity(), FastTravel.instance.locations.get(args[0]));
+                TeleportHelper.teleportEntity(sender.getCommandSenderEntity(), FastTravel.instance.locations.get(tag));
                 Random rnd = new Random(System.currentTimeMillis() / 1000);
                 float dx;
                 float dy;
