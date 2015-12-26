@@ -2,6 +2,7 @@ package k4unl.minecraft.fastTravel.commands;
 
 import k4unl.minecraft.fastTravel.FastTravel;
 import k4unl.minecraft.fastTravel.lib.Users;
+import k4unl.minecraft.fastTravel.lib.config.FastTravelConfig;
 import k4unl.minecraft.fastTravel.lib.config.ModInfo;
 import k4unl.minecraft.k4lib.commands.CommandK4Base;
 import k4unl.minecraft.k4lib.lib.Functions;
@@ -64,6 +65,10 @@ public class CommandFastTravel extends CommandK4Base {
                     sender.addChatMessage(new ChatComponentText("- " + entry.getKey()));
                 }
             } else if (args[0].toLowerCase().equals("set")) {
+                if((FastTravelConfig.INSTANCE.getBool("masterListForOpOnly") && !Functions.isPlayerOpped(sender.getCommandSenderName()))){
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "You do not have permission to use this command."));
+                    return;
+                }
                 if (args.length == 2) {
                     FastTravel.instance.locations.put(args[1], new Location(sender.getPosition()));
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "Location " + args[1] + " saved!"));
@@ -78,6 +83,10 @@ public class CommandFastTravel extends CommandK4Base {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /fasttravel setprivate <name>"));
                 }
             } else if (args[0].toLowerCase().equals("del")) {
+                if((FastTravelConfig.INSTANCE.getBool("masterListForOpOnly") && !Functions.isPlayerOpped(sender.getCommandSenderName()))){
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "You do not have permission to use this command."));
+                    return;
+                }
                 if (args.length == 2) {
                     if (FastTravel.instance.locations.containsKey(args[1])) {
                         FastTravel.instance.locations.remove(args[1]);
