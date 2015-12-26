@@ -83,7 +83,7 @@ public class FastTravel {
         if (dir != null) {
             Gson gson = new Gson();
             String p = dir.getAbsolutePath();
-            p += "/fasttravel.locations.json";
+            p += "/" + ModInfo.ID + ".locations.json";
             File f = new File(p);
             if (!f.exists()) {
                 try {
@@ -127,7 +127,7 @@ public class FastTravel {
             String json = gson.toJson(locations);
             //Log.info("Saving: " + json);
             String p = dir.getAbsolutePath();
-            p += "/fasttravel.locations.json";
+            p += "/" + ModInfo.ID + ".locations.json";
             File f = new File(p);
             if (!f.exists()) {
                 try {
