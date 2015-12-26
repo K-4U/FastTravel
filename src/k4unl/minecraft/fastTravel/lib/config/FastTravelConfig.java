@@ -15,5 +15,7 @@ public class FastTravelConfig extends Config {
         configOptions.add(new ConfigOption("experienceUsageDimensionTravel", 50).setComment("The amount of experience to use when traveling "
           + "between dimensions"));
         configOptions.add(new ConfigOption("masterListForOpOnly", true).setComment("Whether or not only OP can use /fasttravel set|del"));
+        configOptions.add(new ConfigOption("enablePrivateList", true).setComment("Allows users to set their own waypoints."));
+        configOptions.add(new ConfigOption("allowBookList", true).setComment("Allows users to spawn a book with all the waypoints listed"));
     }
 }
