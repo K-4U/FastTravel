@@ -1,9 +1,13 @@
 package k4unl.minecraft.fastTravel.commands;
 
 import k4unl.minecraft.fastTravel.FastTravel;
+import k4unl.minecraft.fastTravel.lib.config.FastTravelConfig;
 import k4unl.minecraft.k4lib.commands.CommandK4Base;
+import k4unl.minecraft.k4lib.lib.Functions;
+import k4unl.minecraft.k4lib.lib.Location;
 import k4unl.minecraft.k4lib.lib.TeleportHelper;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.EnumParticleTypes;
@@ -37,6 +41,26 @@ public class CommandTravel extends CommandK4Base {
 
         if (args.length == 1) {
             if (FastTravel.instance.locations.containsKey(args[0])) {
+                if (FastTravelConfig.INSTANCE.getBool("useExperienceOnTravel")) {
+                    Location startLocation = new Location((EntityPlayer) sender.getCommandSenderEntity());
+                    int distance = startLocation.getDifference(FastTravel.instance.locations.get(args[0]));
+                    int experienceCost = (int)(FastTravelConfig.INSTANCE.getDouble("experienceMultiplier") * distance);
+                    if (startLocation.getDimension() != FastTravel.instance.locations.get(args[0]).getDimension()) {
+                        experienceCost += FastTravelConfig.INSTANCE.getInt("experienceUsageDimensionTravel");
+                    }
+
+                    EntityPlayer player = (EntityPlayer) sender.getCommandSenderEntity();
+
+                    if (player.experienceTotal < experienceCost) {
+                        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "You don't have enough experience to make this "
+                          + "journey"));
+                        return;
+                    }
+
+                    experienceCost = experienceCost * -1;
+                    Functions.addPlayerXP(player, experienceCost);
+                }
+
                 TeleportHelper.teleportEntity(sender.getCommandSenderEntity(), FastTravel.instance.locations.get(args[0]));
                 Random rnd = new Random(System.currentTimeMillis() / 1000);
                 float dx;
