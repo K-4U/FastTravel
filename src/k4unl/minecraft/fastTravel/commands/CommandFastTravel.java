@@ -2,7 +2,6 @@ package k4unl.minecraft.fastTravel.commands;
 
 import com.google.common.base.Joiner;
 import k4unl.minecraft.fastTravel.FastTravel;
-import k4unl.minecraft.fastTravel.lib.Log;
 import k4unl.minecraft.fastTravel.lib.Users;
 import k4unl.minecraft.fastTravel.lib.config.FastTravelConfig;
 import k4unl.minecraft.fastTravel.lib.config.ModInfo;
@@ -195,16 +194,23 @@ public class CommandFastTravel extends CommandK4Base {
 
         String p = "";
         int i = 0;
+        NBTTagList extra = new NBTTagList();
         if(FastTravel.instance.locations.size() > 0) {
             for (Map.Entry<String, Location> entry : FastTravel.instance.locations.entrySet()) {
                 i++;
                 if(!p.equals("")){
-                    p+= ",";
+                    p+= ", ";
                 }
+                NBTTagCompound pEntry = parseEntry(entry.getKey());
+                extra.appendTag(pEntry);
+                //p += pEntry.toString();
+                //Log.info(pEntry.toString());
+                //Log.info(p);
                 p += "{\"clickEvent\":{\"action\":\"run_command\",\"value\":\"/travel " + entry.getKey() + "\"}, \"text\":\"" + entry.getKey() +
                   "\n\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":{\"text\":\"\",\"extra\":[{\"text\":\"Click to travel\"}]}}}";
+
                 if (i == 14) {
-                    tList.appendTag(new NBTTagString("{\"extra\":[" + p + "]}"));
+                    tList.appendTag(new NBTTagString(p));
                     i = 0;
                     p = "";
                 }
@@ -224,5 +230,29 @@ public class CommandFastTravel extends CommandK4Base {
         EntityItem EItem = new EntityItem(player.worldObj, player.getPosition().getX(), player.getPosition().getY(), player.getPosition().getZ(),
           book);
         player.worldObj.spawnEntityInWorld(EItem);
+    }
+
+    private NBTTagCompound parseEntry(String key){
+        NBTTagCompound clickEvent = new NBTTagCompound();
+        NBTTagCompound hoverEvent = new NBTTagCompound();
+        NBTTagCompound hoverValue = new NBTTagCompound();
+        NBTTagList hoverValueExtra = new NBTTagList();
+        NBTTagCompound hoverValueExtraText = new NBTTagCompound();
+
+        hoverValueExtraText.setString("text","Click to travel");
+        hoverValueExtra.appendTag(hoverValueExtraText);
+        hoverValue.setTag("extra", hoverValueExtra);
+        hoverValue.setString("text", "");
+        hoverEvent.setTag("value", hoverValue);
+        hoverEvent.setString("action", "show_text");
+
+        NBTTagCompound pageEntry = new NBTTagCompound();
+        clickEvent.setString("action", "run_command");
+        clickEvent.setString("value", "/travel " + key);
+        pageEntry.setTag("clickEvent", clickEvent);
+//        pageEntry.setTag("hoverEvent", hoverEvent);
+        pageEntry.setString("text", key);
+
+        return pageEntry;
     }
 }
