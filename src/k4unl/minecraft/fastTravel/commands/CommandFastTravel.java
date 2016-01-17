@@ -11,6 +11,8 @@ import k4unl.minecraft.k4lib.lib.Location;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.event.ClickEvent;
+import net.minecraft.event.HoverEvent;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -19,6 +21,7 @@ import net.minecraft.nbt.NBTTagString;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.IChatComponent;
 import net.minecraftforge.common.DimensionManager;
 
 import java.text.SimpleDateFormat;
@@ -40,7 +43,7 @@ public class CommandFastTravel extends CommandK4Base {
     @Override
     public String getCommandUsage(ICommandSender sender) {
         String result = "fasttravel version";
-        if(Functions.isPlayerOpped(sender.getCommandSenderName())){
+        if (Functions.isPlayerOpped(sender.getCommandSenderName())) {
             result += "|save|load";
         }
         result += "|list";
@@ -48,10 +51,10 @@ public class CommandFastTravel extends CommandK4Base {
         if ((!FastTravelConfig.INSTANCE.getBool("masterListForOpOnly") || Functions.isPlayerOpped(sender.getCommandSenderName()))) {
             result += "|set|del";
         }
-        if(FastTravelConfig.INSTANCE.getBool("enablePrivateList")){
+        if (FastTravelConfig.INSTANCE.getBool("enablePrivateList")) {
             result += "|listprivate|setprivate|delprivate";
         }
-        if(FastTravelConfig.INSTANCE.getBool("allowBookList")){
+        if (FastTravelConfig.INSTANCE.getBool("allowBookList")) {
             result += "|book";
         }
 
@@ -88,13 +91,13 @@ public class CommandFastTravel extends CommandK4Base {
                     sender.addChatMessage(new ChatComponentText("- " + entry.getKey()));
                 }
             } else if (args[0].toLowerCase().equals("listprivate")) {
-                if(FastTravelConfig.INSTANCE.getBool("enablePrivateList")) {
+                if (FastTravelConfig.INSTANCE.getBool("enablePrivateList")) {
                     for (Map.Entry<String, Location> entry : Users.getUserByName(sender.getCommandSenderName()).getLocations().entrySet()) {
                         sender.addChatMessage(new ChatComponentText("- " + entry.getKey()));
                     }
                 }
             } else if (args[0].toLowerCase().equals("set")) {
-                if((FastTravelConfig.INSTANCE.getBool("masterListForOpOnly") && !Functions.isPlayerOpped(sender.getCommandSenderName()))){
+                if ((FastTravelConfig.INSTANCE.getBool("masterListForOpOnly") && !Functions.isPlayerOpped(sender.getCommandSenderName()))) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "You do not have permission to use this command."));
                     return;
                 }
@@ -105,7 +108,7 @@ public class CommandFastTravel extends CommandK4Base {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /fasttravel set <name>"));
                 }
             } else if (args[0].toLowerCase().equals("setprivate")) {
-                if(FastTravelConfig.INSTANCE.getBool("enablePrivateList")) {
+                if (FastTravelConfig.INSTANCE.getBool("enablePrivateList")) {
                     if (args.length >= 2) {
                         Users.getUserByName(sender.getCommandSenderName()).addLocation(tag, new Location(sender.getPosition()));
                         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "Location " + tag + " saved!"));
@@ -114,7 +117,7 @@ public class CommandFastTravel extends CommandK4Base {
                     }
                 }
             } else if (args[0].toLowerCase().equals("del")) {
-                if((FastTravelConfig.INSTANCE.getBool("masterListForOpOnly") && !Functions.isPlayerOpped(sender.getCommandSenderName()))){
+                if ((FastTravelConfig.INSTANCE.getBool("masterListForOpOnly") && !Functions.isPlayerOpped(sender.getCommandSenderName()))) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "You do not have permission to use this command."));
                     return;
                 }
@@ -129,7 +132,7 @@ public class CommandFastTravel extends CommandK4Base {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /fasttravel del <name>"));
                 }
             } else if (args[0].toLowerCase().equals("delprivate")) {
-                if(FastTravelConfig.INSTANCE.getBool("enablePrivateList")) {
+                if (FastTravelConfig.INSTANCE.getBool("enablePrivateList")) {
                     if (args.length >= 2) {
                         if (Users.getUserByName(sender.getCommandSenderName()).getLocations().containsKey(tag)) {
                             Users.getUserByName(sender.getCommandSenderName()).removeLocation(tag);
@@ -141,9 +144,9 @@ public class CommandFastTravel extends CommandK4Base {
                         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /fasttravel del <name>"));
                     }
                 }
-            }else if(args[0].toLowerCase().equals("book")){
-                if(FastTravelConfig.INSTANCE.getBool("allowBookList")){
-                    spawnBook((EntityPlayer)sender.getCommandSenderEntity());
+            } else if (args[0].toLowerCase().equals("book")) {
+                if (FastTravelConfig.INSTANCE.getBool("allowBookList")) {
+                    spawnBook((EntityPlayer) sender.getCommandSenderEntity());
                 }
             }
         } else {
@@ -172,87 +175,144 @@ public class CommandFastTravel extends CommandK4Base {
         return ret;
     }
 
-    private void spawnBook(EntityPlayer player){
-
+    private void spawnBook(EntityPlayer player) {
+        //Search the players current held item for the book.
+        boolean foundBook = false;
         ItemStack book = new ItemStack(Items.written_book, 1);
         NBTTagCompound tCompound = new NBTTagCompound();
+        if (player.getHeldItem() != null) {
+            if (player.getHeldItem().getItem() == Items.written_book) {
+
+                //Find the NBT:
+                tCompound = player.getHeldItem().getTagCompound();
+                if (tCompound.getString("author").equals("K4Unl") && tCompound.getString("title").equals("Waypoints")) {
+                    //Oh yeah!
+                    book = player.getHeldItem().copy();
+                    foundBook = true;
+                }
+            }
+        }
+
         tCompound.setString("author", "K4Unl");
         tCompound.setString("title", "Waypoints");
         NBTTagList tList = new NBTTagList();
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat(("dd-MM-yyyy"));
-        String page1 = "";
-        page1 += EnumChatFormatting.BOLD + "K4Unl's \n";
-        page1 += EnumChatFormatting.BOLD + "Fast Travel Guide\n\n";
-        page1 += EnumChatFormatting.DARK_GREEN + "This book lists all the \n";
-        page1 += EnumChatFormatting.DARK_GREEN + "waypoints as of \n";
-        page1 += EnumChatFormatting.DARK_GREEN + "" + EnumChatFormatting.BOLD + dateFormat.format(new Date()) + "\n";
-        page1 += EnumChatFormatting.DARK_GREEN + "It will not update\n";
-        page1 += EnumChatFormatting.DARK_GREEN + "automatically!\n";
+        SimpleDateFormat dateFormat = new SimpleDateFormat(("HH:mm dd-MM-yyyy"));
+        IChatComponent page1 = new ChatComponentText("");
 
-        tList.appendTag(new NBTTagString(page1));
+        page1.appendText(EnumChatFormatting.BOLD + "K4Unl's \n");
+        page1.appendText(EnumChatFormatting.BOLD + "Fast Travel Guide\n\n");
+        page1.appendText(EnumChatFormatting.DARK_GREEN + "This book lists all the \n");
+        page1.appendText(EnumChatFormatting.DARK_GREEN + "waypoints as of \n");
+        page1.appendText(EnumChatFormatting.DARK_GREEN + "" + EnumChatFormatting.BOLD + dateFormat.format(new Date()) + "\n");
+        page1.appendText(EnumChatFormatting.DARK_GREEN + "It will not update\n");
+        page1.appendText(EnumChatFormatting.DARK_GREEN + "automatically!\n\n");
 
-        String p = "";
+        IChatComponent updateLink = new ChatComponentText("Update\n");
+        updateLink.getChatStyle().setColor(EnumChatFormatting.BLUE);
+        updateLink.getChatStyle().setUnderlined(true);
+        updateLink.getChatStyle().setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("Click here to update the book!")));
+        updateLink.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/fasttravel book"));
+
+        page1.appendSibling(updateLink);
+
+        IChatComponent publicListLink = new ChatComponentText("Public list\n");
+        publicListLink.getChatStyle().setColor(EnumChatFormatting.BLUE);
+        publicListLink.getChatStyle().setUnderlined(true);
+        publicListLink.getChatStyle().setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("Click here to go to the public list.")));
+        publicListLink.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.CHANGE_PAGE, "2"));
+        page1.appendSibling(publicListLink);
+
+        IChatComponent privateListLink = new ChatComponentText("Private list\n");
+        if (FastTravelConfig.INSTANCE.getBool("enablePrivateList")) {
+            privateListLink.getChatStyle().setColor(EnumChatFormatting.BLUE);
+            privateListLink.getChatStyle().setUnderlined(true);
+            privateListLink.getChatStyle().setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("Click here to go to your private list.")));
+        }
+
+        tList.appendTag(new NBTTagString(IChatComponent.Serializer.componentToJson(page1)));
+
+        HoverEvent backButtonHover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("Back to title"));
+        ClickEvent backButtonClick = new ClickEvent(ClickEvent.Action.CHANGE_PAGE, "1");
+        ChatComponentText backButton = new ChatComponentText("Back\n");
+        backButton.getChatStyle().setColor(EnumChatFormatting.BLUE);
+        backButton.getChatStyle().setUnderlined(true);
+        backButton.getChatStyle().setChatHoverEvent(backButtonHover);
+        backButton.getChatStyle().setChatClickEvent(backButtonClick);
+
+        IChatComponent p = new ChatComponentText("");
+        p.appendSibling(backButton);
         int i = 0;
+        int page = 2;
         NBTTagList extra = new NBTTagList();
-        if(FastTravel.instance.locations.size() > 0) {
+        if (FastTravel.instance.locations.size() > 0) {
             for (Map.Entry<String, Location> entry : FastTravel.instance.locations.entrySet()) {
                 i++;
-                if(!p.equals("")){
-                    p+= ", ";
-                }
-                NBTTagCompound pEntry = parseEntry(entry.getKey());
-                extra.appendTag(pEntry);
-                //p += pEntry.toString();
-                //Log.info(pEntry.toString());
-                //Log.info(p);
-                p += "{\"clickEvent\":{\"action\":\"run_command\",\"value\":\"/travel " + entry.getKey() + "\"}, \"text\":\"" + entry.getKey() +
-                  "\n\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":{\"text\":\"\",\"extra\":[{\"text\":\"Click to travel\"}]}}}";
+                p = p.appendSibling(parseEntry(entry.getKey()));
 
-                if (i == 14) {
-                    tList.appendTag(new NBTTagString(p));
+                if (i == 13) {
+                    tList.appendTag(new NBTTagString(IChatComponent.Serializer.componentToJson(p)));
                     i = 0;
-                    p = "";
+                    p = new ChatComponentText("");
+                    p.appendSibling(backButton);
+                    page++;
                 }
             }
-        }else{
-            p = "No locations defined yet!";
+        } else {
+            p.appendSibling(new ChatComponentText(EnumChatFormatting.RESET + "No locations defined yet."));
         }
-        if(i < 14){
-            tList.appendTag(new NBTTagString(p));
+        if (i < 13) {
+            tList.appendTag(new NBTTagString(IChatComponent.Serializer.componentToJson(p)));
+            page++;
         }
 
+        if (FastTravelConfig.INSTANCE.getBool("enablePrivateList")) {
+            p = new ChatComponentText("");
+            p.appendSibling(backButton);
+            i = 0;
+            if (Users.getUserByName(player.getDisplayNameString()).getLocations().size() > 0) {
+                for (Map.Entry<String, Location> entry : Users.getUserByName(player.getDisplayNameString()).getLocations().entrySet()) {
+                    i++;
+                    p = p.appendSibling(parseEntry(entry.getKey()));
+
+                    if (i == 13) {
+                        tList.appendTag(new NBTTagString(IChatComponent.Serializer.componentToJson(p)));
+                        i = 0;
+                        p = new ChatComponentText("");
+                        p.appendSibling(backButton);
+                    }
+                }
+            } else {
+                p.appendSibling(new ChatComponentText(EnumChatFormatting.RESET + "No locations defined yet."));
+            }
+            if (i < 13) {
+                tList.appendTag(new NBTTagString(IChatComponent.Serializer.componentToJson(p)));
+            }
+
+            privateListLink.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.CHANGE_PAGE, "" + page));
+
+            page1.appendSibling(privateListLink);
+        }
+
+        tList.set(0, new NBTTagString(IChatComponent.Serializer.componentToJson(page1)));
 
         tCompound.setTag("pages", tList);
 
         book.setTagCompound(tCompound);
 
-        EntityItem EItem = new EntityItem(player.worldObj, player.getPosition().getX(), player.getPosition().getY(), player.getPosition().getZ(),
-          book);
-        player.worldObj.spawnEntityInWorld(EItem);
+        if (!foundBook) {
+            EntityItem EItem = new EntityItem(player.worldObj, player.getPosition().getX(), player.getPosition().getY(), player.getPosition().getZ(),
+                    book);
+            player.worldObj.spawnEntityInWorld(EItem);
+        }
     }
 
-    private NBTTagCompound parseEntry(String key){
-        NBTTagCompound clickEvent = new NBTTagCompound();
-        NBTTagCompound hoverEvent = new NBTTagCompound();
-        NBTTagCompound hoverValue = new NBTTagCompound();
-        NBTTagList hoverValueExtra = new NBTTagList();
-        NBTTagCompound hoverValueExtraText = new NBTTagCompound();
+    private IChatComponent parseEntry(String key) {
+        IChatComponent chatComponent = new ChatComponentText(key + "\n");
+        chatComponent.getChatStyle().setColor(EnumChatFormatting.DARK_BLUE);
+        chatComponent.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/travel " + key));
+        chatComponent.getChatStyle().setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("Click to travel")));
 
-        hoverValueExtraText.setString("text","Click to travel");
-        hoverValueExtra.appendTag(hoverValueExtraText);
-        hoverValue.setTag("extra", hoverValueExtra);
-        hoverValue.setString("text", "");
-        hoverEvent.setTag("value", hoverValue);
-        hoverEvent.setString("action", "show_text");
-
-        NBTTagCompound pageEntry = new NBTTagCompound();
-        clickEvent.setString("action", "run_command");
-        clickEvent.setString("value", "/travel " + key);
-        pageEntry.setTag("clickEvent", clickEvent);
-//        pageEntry.setTag("hoverEvent", hoverEvent);
-        pageEntry.setString("text", key);
-
-        return pageEntry;
+        return chatComponent;
     }
 }

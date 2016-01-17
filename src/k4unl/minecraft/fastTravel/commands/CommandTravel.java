@@ -2,6 +2,7 @@ package k4unl.minecraft.fastTravel.commands;
 
 import com.google.common.base.Joiner;
 import k4unl.minecraft.fastTravel.FastTravel;
+import k4unl.minecraft.fastTravel.lib.Users;
 import k4unl.minecraft.fastTravel.lib.config.FastTravelConfig;
 import k4unl.minecraft.k4lib.commands.CommandK4Base;
 import k4unl.minecraft.k4lib.lib.Functions;
@@ -40,15 +41,24 @@ public class CommandTravel extends CommandK4Base {
     @Override
     public void processCommand(ICommandSender sender, String[] args) {
 
-        if (args.length == 1) {
+        if (args.length >= 1) {
             String tag = Joiner.on(" ").join(args);
             
-            if (FastTravel.instance.locations.containsKey(tag)) {
-                if (FastTravelConfig.INSTANCE.getBool("useExperienceOnTravel")) {
+            if (!FastTravel.instance.locations.containsKey(tag) && !Users.getUserByName(sender.getCommandSenderName()).getLocations().containsKey(tag)) {
+                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Location does not exist"));
+            }else{
+                Location target = null;
+                if(FastTravel.instance.locations.containsKey(tag)){
+                    target = FastTravel.instance.locations.get(tag);
+                }else{
+                    target = Users.getUserByName(sender.getCommandSenderName()).getLocations().get(tag);
+                }
+
+                if (FastTravelConfig.INSTANCE.getBool("useExperienceOnTravel") && !((EntityPlayer)sender.getCommandSenderEntity()).capabilities.isCreativeMode) {
                     Location startLocation = new Location((EntityPlayer) sender.getCommandSenderEntity());
-                    int distance = startLocation.getDifference(FastTravel.instance.locations.get(tag));
+                    int distance = startLocation.getDifference(target);
                     int experienceCost = (int)(FastTravelConfig.INSTANCE.getDouble("experienceMultiplier") * distance);
-                    if (startLocation.getDimension() != FastTravel.instance.locations.get(tag).getDimension()) {
+                    if (startLocation.getDimension() != target.getDimension()) {
                         experienceCost += FastTravelConfig.INSTANCE.getInt("experienceUsageDimensionTravel");
                     }
 
@@ -64,7 +74,7 @@ public class CommandTravel extends CommandK4Base {
                     Functions.addPlayerXP(player, experienceCost);
                 }
 
-                TeleportHelper.teleportEntity(sender.getCommandSenderEntity(), FastTravel.instance.locations.get(tag));
+                TeleportHelper.teleportEntity(sender.getCommandSenderEntity(), target);
                 Random rnd = new Random(System.currentTimeMillis() / 1000);
                 float dx;
                 float dy;
@@ -81,8 +91,6 @@ public class CommandTravel extends CommandK4Base {
                 }
 
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Woosh"));
-            } else {
-                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Location does not exist"));
             }
 
         } else {
