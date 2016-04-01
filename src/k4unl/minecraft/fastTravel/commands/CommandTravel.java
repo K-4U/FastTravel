@@ -8,10 +8,12 @@ import k4unl.minecraft.k4lib.commands.CommandK4Base;
 import k4unl.minecraft.k4lib.lib.Functions;
 import k4unl.minecraft.k4lib.lib.Location;
 import k4unl.minecraft.k4lib.lib.TeleportHelper;
+import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.EnumParticleTypes;
 
 import java.util.Random;
@@ -39,19 +41,19 @@ public class CommandTravel extends CommandK4Base {
     }
 
     @Override
-    public void processCommand(ICommandSender sender, String[] args) {
+    public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
 
         if (args.length >= 1) {
             String tag = Joiner.on(" ").join(args);
             
-            if (!FastTravel.instance.locations.containsKey(tag) && !Users.getUserByName(sender.getCommandSenderName()).getLocations().containsKey(tag)) {
-                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Location does not exist"));
+            if (!FastTravel.instance.locations.containsKey(tag) && !Users.getUserByName(sender.getName()).getLocations().containsKey(tag)) {
+                sender.addChatMessage(new TextComponentString(TextFormatting.RED + "Location does not exist"));
             }else{
-                Location target = null;
+                Location target;
                 if(FastTravel.instance.locations.containsKey(tag)){
                     target = FastTravel.instance.locations.get(tag);
                 }else{
-                    target = Users.getUserByName(sender.getCommandSenderName()).getLocations().get(tag);
+                    target = Users.getUserByName(sender.getName()).getLocations().get(tag);
                 }
 
                 if (FastTravelConfig.INSTANCE.getBool("useExperienceOnTravel") && !((EntityPlayer)sender.getCommandSenderEntity()).capabilities.isCreativeMode) {
@@ -65,7 +67,7 @@ public class CommandTravel extends CommandK4Base {
                     EntityPlayer player = (EntityPlayer) sender.getCommandSenderEntity();
 
                     if (player.experienceTotal < experienceCost) {
-                        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "You don't have enough experience to make this "
+                        sender.addChatMessage(new TextComponentString(TextFormatting.RED + "You don't have enough experience to make this "
                           + "journey"));
                         return;
                     }
@@ -90,11 +92,11 @@ public class CommandTravel extends CommandK4Base {
                     sender.getEntityWorld().spawnParticle(EnumParticleTypes.SMOKE_NORMAL, x + .5F, y + .5F, z + .5F, dx, dy, dz);
                 }
 
-                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Woosh"));
+                sender.addChatMessage(new TextComponentString(TextFormatting.GRAY + "Woosh"));
             }
 
         } else {
-            sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /travel <location>"));
+            sender.addChatMessage(new TextComponentString(TextFormatting.RED + "Usage: /travel <location>"));
         }
     }
 }

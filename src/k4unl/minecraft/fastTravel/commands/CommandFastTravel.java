@@ -8,20 +8,24 @@ import k4unl.minecraft.fastTravel.lib.config.ModInfo;
 import k4unl.minecraft.k4lib.commands.CommandK4Base;
 import k4unl.minecraft.k4lib.lib.Functions;
 import k4unl.minecraft.k4lib.lib.Location;
+import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.event.ClickEvent;
-import net.minecraft.event.HoverEvent;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.text.event.ClickEvent;
+import net.minecraft.util.text.event.HoverEvent;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.EnumChatFormatting;
-import net.minecraft.util.IChatComponent;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.common.DimensionManager;
 
 import java.text.SimpleDateFormat;
@@ -43,12 +47,12 @@ public class CommandFastTravel extends CommandK4Base {
     @Override
     public String getCommandUsage(ICommandSender sender) {
         String result = "fasttravel version";
-        if (Functions.isPlayerOpped(sender.getCommandSenderName())) {
+        if (Functions.isPlayerOpped(((EntityPlayerMP)sender).getGameProfile())) {
             result += "|save|load";
         }
         result += "|list";
 
-        if ((!FastTravelConfig.INSTANCE.getBool("masterListForOpOnly") || Functions.isPlayerOpped(sender.getCommandSenderName()))) {
+        if ((!FastTravelConfig.INSTANCE.getBool("masterListForOpOnly") || Functions.isPlayerOpped(((EntityPlayerMP)sender).getGameProfile()))) {
             result += "|set|del";
         }
         if (FastTravelConfig.INSTANCE.getBool("enablePrivateList")) {
@@ -62,86 +66,86 @@ public class CommandFastTravel extends CommandK4Base {
     }
 
     @Override
-    public void processCommand(ICommandSender sender, String[] args) {
+    public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
 
         if (args.length >= 1) {
-            List<String> args_ = new ArrayList<String>();
+            List<String> args_ = new ArrayList<>();
             Collections.addAll(args_, args);
 
             args_.remove(args[0]);
             String tag = Joiner.on(" ").join(args_);
             if (args[0].toLowerCase().equals("version")) {
-                sender.addChatMessage(new ChatComponentText("Fast Travel version " + ModInfo.VERSION));
+                sender.addChatMessage(new TextComponentString("Fast Travel version " + ModInfo.VERSION));
             } else if (args[0].toLowerCase().equals("save")) {
-                if (Functions.isPlayerOpped(sender.getCommandSenderName())) {
+                if (Functions.isPlayerOpped(((EntityPlayerMP)sender).getGameProfile())) {
                     Users.saveToFile(DimensionManager.getCurrentSaveRootDirectory());
                     FastTravel.instance.saveLocationsToFile(DimensionManager.getCurrentSaveRootDirectory());
 
-                    sender.addChatMessage(new ChatComponentText("Locations and user settings saved to world dir!"));
+                    sender.addChatMessage(new TextComponentString("Locations and user settings saved to world dir!"));
                 }
             } else if (args[0].toLowerCase().equals("load")) {
-                if (Functions.isPlayerOpped(sender.getCommandSenderName())) {
+                if (Functions.isPlayerOpped(((EntityPlayerMP)sender).getGameProfile())) {
                     Users.readFromFile(DimensionManager.getCurrentSaveRootDirectory());
                     FastTravel.instance.readLocationsFile(DimensionManager.getCurrentSaveRootDirectory());
 
-                    sender.addChatMessage(new ChatComponentText("Locations and user settings loaded from world dir!"));
+                    sender.addChatMessage(new TextComponentString("Locations and user settings loaded from world dir!"));
                 }
             } else if (args[0].toLowerCase().equals("list")) {
                 for (Map.Entry<String, Location> entry : FastTravel.instance.locations.entrySet()) {
-                    sender.addChatMessage(new ChatComponentText("- " + entry.getKey()));
+                    sender.addChatMessage(new TextComponentString("- " + entry.getKey()));
                 }
             } else if (args[0].toLowerCase().equals("listprivate")) {
                 if (FastTravelConfig.INSTANCE.getBool("enablePrivateList")) {
-                    for (Map.Entry<String, Location> entry : Users.getUserByName(sender.getCommandSenderName()).getLocations().entrySet()) {
-                        sender.addChatMessage(new ChatComponentText("- " + entry.getKey()));
+                    for (Map.Entry<String, Location> entry : Users.getUserByName(sender.getName()).getLocations().entrySet()) {
+                        sender.addChatMessage(new TextComponentString("- " + entry.getKey()));
                     }
                 }
             } else if (args[0].toLowerCase().equals("set")) {
-                if ((FastTravelConfig.INSTANCE.getBool("masterListForOpOnly") && !Functions.isPlayerOpped(sender.getCommandSenderName()))) {
-                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "You do not have permission to use this command."));
+                if ((FastTravelConfig.INSTANCE.getBool("masterListForOpOnly") && !Functions.isPlayerOpped(((EntityPlayerMP)sender).getGameProfile()))) {
+                    sender.addChatMessage(new TextComponentString(TextFormatting.RED + "You do not have permission to use this command."));
                     return;
                 }
                 if (args.length >= 2) {
                     FastTravel.instance.locations.put(tag, new Location(sender.getPosition()));
-                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "Location " + tag + " saved!"));
+                    sender.addChatMessage(new TextComponentString(TextFormatting.GREEN + "Location " + tag + " saved!"));
                 } else {
-                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /fasttravel set <name>"));
+                    sender.addChatMessage(new TextComponentString(TextFormatting.RED + "Usage: /fasttravel set <name>"));
                 }
             } else if (args[0].toLowerCase().equals("setprivate")) {
                 if (FastTravelConfig.INSTANCE.getBool("enablePrivateList")) {
                     if (args.length >= 2) {
-                        Users.getUserByName(sender.getCommandSenderName()).addLocation(tag, new Location(sender.getPosition()));
-                        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "Location " + tag + " saved!"));
+                        Users.getUserByName(sender.getName()).addLocation(tag, new Location(sender.getPosition()));
+                        sender.addChatMessage(new TextComponentString(TextFormatting.GREEN + "Location " + tag + " saved!"));
                     } else {
-                        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /fasttravel setprivate <name>"));
+                        sender.addChatMessage(new TextComponentString(TextFormatting.RED + "Usage: /fasttravel setprivate <name>"));
                     }
                 }
             } else if (args[0].toLowerCase().equals("del")) {
-                if ((FastTravelConfig.INSTANCE.getBool("masterListForOpOnly") && !Functions.isPlayerOpped(sender.getCommandSenderName()))) {
-                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "You do not have permission to use this command."));
+                if ((FastTravelConfig.INSTANCE.getBool("masterListForOpOnly") && !Functions.isPlayerOpped(((EntityPlayerMP)sender).getGameProfile()))) {
+                    sender.addChatMessage(new TextComponentString(TextFormatting.RED + "You do not have permission to use this command."));
                     return;
                 }
                 if (args.length >= 2) {
                     if (FastTravel.instance.locations.containsKey(tag)) {
                         FastTravel.instance.locations.remove(tag);
-                        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "Location removed"));
+                        sender.addChatMessage(new TextComponentString(TextFormatting.GREEN + "Location removed"));
                     } else {
-                        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "This location does not exist"));
+                        sender.addChatMessage(new TextComponentString(TextFormatting.RED + "This location does not exist"));
                     }
                 } else {
-                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /fasttravel del <name>"));
+                    sender.addChatMessage(new TextComponentString(TextFormatting.RED + "Usage: /fasttravel del <name>"));
                 }
             } else if (args[0].toLowerCase().equals("delprivate")) {
                 if (FastTravelConfig.INSTANCE.getBool("enablePrivateList")) {
                     if (args.length >= 2) {
-                        if (Users.getUserByName(sender.getCommandSenderName()).getLocations().containsKey(tag)) {
-                            Users.getUserByName(sender.getCommandSenderName()).removeLocation(tag);
-                            sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "Location removed"));
+                        if (Users.getUserByName(sender.getName()).getLocations().containsKey(tag)) {
+                            Users.getUserByName(sender.getName()).removeLocation(tag);
+                            sender.addChatMessage(new TextComponentString(TextFormatting.GREEN + "Location removed"));
                         } else {
-                            sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "This location does not exist"));
+                            sender.addChatMessage(new TextComponentString(TextFormatting.RED + "This location does not exist"));
                         }
                     } else {
-                        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /fasttravel del <name>"));
+                        sender.addChatMessage(new TextComponentString(TextFormatting.RED + "Usage: /fasttravel del <name>"));
                     }
                 }
             } else if (args[0].toLowerCase().equals("book")) {
@@ -150,15 +154,15 @@ public class CommandFastTravel extends CommandK4Base {
                 }
             }
         } else {
-            sender.addChatMessage(new ChatComponentText("Usage: " + getCommandUsage(sender)));
+            sender.addChatMessage(new TextComponentString("Usage: " + getCommandUsage(sender)));
         }
     }
 
 
     @Override
-    public List addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
+    public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos pos) {
 
-        List<String> ret = new ArrayList<String>();
+        List<String> ret = new ArrayList<>();
 
         if (args.length == 1) {
             ret.add("load");
@@ -180,14 +184,14 @@ public class CommandFastTravel extends CommandK4Base {
         boolean foundBook = false;
         ItemStack book = new ItemStack(Items.written_book, 1);
         NBTTagCompound tCompound = new NBTTagCompound();
-        if (player.getHeldItem() != null) {
-            if (player.getHeldItem().getItem() == Items.written_book) {
+        if (player.getHeldItem(EnumHand.MAIN_HAND) != null) {
+            if (player.getHeldItem(EnumHand.MAIN_HAND).getItem() == Items.written_book) {
 
                 //Find the NBT:
-                tCompound = player.getHeldItem().getTagCompound();
+                tCompound = player.getHeldItem(EnumHand.MAIN_HAND).getTagCompound();
                 if (tCompound.getString("author").equals("K4Unl") && tCompound.getString("title").equals("Waypoints")) {
                     //Oh yeah!
-                    book = player.getHeldItem().copy();
+                    book = player.getHeldItem(EnumHand.MAIN_HAND).copy();
                     foundBook = true;
                 }
             }
@@ -198,76 +202,75 @@ public class CommandFastTravel extends CommandK4Base {
         NBTTagList tList = new NBTTagList();
 
         SimpleDateFormat dateFormat = new SimpleDateFormat(("HH:mm dd-MM-yyyy"));
-        IChatComponent page1 = new ChatComponentText("");
+        ITextComponent page1 = new TextComponentString("");
 
-        page1.appendText(EnumChatFormatting.BOLD + "K4Unl's \n");
-        page1.appendText(EnumChatFormatting.BOLD + "Fast Travel Guide\n\n");
-        page1.appendText(EnumChatFormatting.DARK_GREEN + "This book lists all the \n");
-        page1.appendText(EnumChatFormatting.DARK_GREEN + "waypoints as of \n");
-        page1.appendText(EnumChatFormatting.DARK_GREEN + "" + EnumChatFormatting.BOLD + dateFormat.format(new Date()) + "\n");
-        page1.appendText(EnumChatFormatting.DARK_GREEN + "It will not update\n");
-        page1.appendText(EnumChatFormatting.DARK_GREEN + "automatically!\n\n");
+        page1.appendText(TextFormatting.BOLD + "K4Unl's \n");
+        page1.appendText(TextFormatting.BOLD + "Fast Travel Guide\n\n");
+        page1.appendText(TextFormatting.DARK_GREEN + "This book lists all the \n");
+        page1.appendText(TextFormatting.DARK_GREEN + "waypoints as of \n");
+        page1.appendText(TextFormatting.DARK_GREEN + "" + TextFormatting.BOLD + dateFormat.format(new Date()) + "\n");
+        page1.appendText(TextFormatting.DARK_GREEN + "It will not update\n");
+        page1.appendText(TextFormatting.DARK_GREEN + "automatically!\n\n");
 
-        IChatComponent updateLink = new ChatComponentText("Update\n");
-        updateLink.getChatStyle().setColor(EnumChatFormatting.BLUE);
-        updateLink.getChatStyle().setUnderlined(true);
-        updateLink.getChatStyle().setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("Click here to update the book!")));
-        updateLink.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/fasttravel book"));
+        ITextComponent updateLink = new TextComponentString("Update\n");
+        updateLink.getStyle().setColor(TextFormatting.BLUE);
+        updateLink.getStyle().setUnderlined(true);
+        updateLink.getStyle().setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponentString("Click here to update the book!")));
+        updateLink.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/fasttravel book"));
 
         page1.appendSibling(updateLink);
 
-        IChatComponent publicListLink = new ChatComponentText("Public list\n");
-        publicListLink.getChatStyle().setColor(EnumChatFormatting.BLUE);
-        publicListLink.getChatStyle().setUnderlined(true);
-        publicListLink.getChatStyle().setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("Click here to go to the public list.")));
-        publicListLink.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.CHANGE_PAGE, "2"));
+        ITextComponent publicListLink = new TextComponentString("Public list\n");
+        publicListLink.getStyle().setColor(TextFormatting.BLUE);
+        publicListLink.getStyle().setUnderlined(true);
+        publicListLink.getStyle().setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponentString("Click here to go to the public list.")));
+        publicListLink.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.CHANGE_PAGE, "2"));
         page1.appendSibling(publicListLink);
 
-        IChatComponent privateListLink = new ChatComponentText("Private list\n");
+        ITextComponent privateListLink = new TextComponentString("Private list\n");
         if (FastTravelConfig.INSTANCE.getBool("enablePrivateList")) {
-            privateListLink.getChatStyle().setColor(EnumChatFormatting.BLUE);
-            privateListLink.getChatStyle().setUnderlined(true);
-            privateListLink.getChatStyle().setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("Click here to go to your private list.")));
+            privateListLink.getStyle().setColor(TextFormatting.BLUE);
+            privateListLink.getStyle().setUnderlined(true);
+            privateListLink.getStyle().setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponentString("Click here to go to your private list.")));
         }
 
-        tList.appendTag(new NBTTagString(IChatComponent.Serializer.componentToJson(page1)));
+        tList.appendTag(new NBTTagString(ITextComponent.Serializer.componentToJson(page1)));
 
-        HoverEvent backButtonHover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("Back to title"));
+        HoverEvent backButtonHover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponentString("Back to title"));
         ClickEvent backButtonClick = new ClickEvent(ClickEvent.Action.CHANGE_PAGE, "1");
-        ChatComponentText backButton = new ChatComponentText("Back\n");
-        backButton.getChatStyle().setColor(EnumChatFormatting.BLUE);
-        backButton.getChatStyle().setUnderlined(true);
-        backButton.getChatStyle().setChatHoverEvent(backButtonHover);
-        backButton.getChatStyle().setChatClickEvent(backButtonClick);
+        TextComponentString backButton = new TextComponentString("Back\n");
+        backButton.getStyle().setColor(TextFormatting.BLUE);
+        backButton.getStyle().setUnderlined(true);
+        backButton.getStyle().setHoverEvent(backButtonHover);
+        backButton.getStyle().setClickEvent(backButtonClick);
 
-        IChatComponent p = new ChatComponentText("");
+        ITextComponent p = new TextComponentString("");
         p.appendSibling(backButton);
         int i = 0;
         int page = 2;
-        NBTTagList extra = new NBTTagList();
         if (FastTravel.instance.locations.size() > 0) {
             for (Map.Entry<String, Location> entry : FastTravel.instance.locations.entrySet()) {
                 i++;
                 p = p.appendSibling(parseEntry(entry.getKey()));
 
                 if (i == 13) {
-                    tList.appendTag(new NBTTagString(IChatComponent.Serializer.componentToJson(p)));
+                    tList.appendTag(new NBTTagString(ITextComponent.Serializer.componentToJson(p)));
                     i = 0;
-                    p = new ChatComponentText("");
+                    p = new TextComponentString("");
                     p.appendSibling(backButton);
                     page++;
                 }
             }
         } else {
-            p.appendSibling(new ChatComponentText(EnumChatFormatting.RESET + "No locations defined yet."));
+            p.appendSibling(new TextComponentString(TextFormatting.RESET + "No locations defined yet."));
         }
         if (i < 13) {
-            tList.appendTag(new NBTTagString(IChatComponent.Serializer.componentToJson(p)));
+            tList.appendTag(new NBTTagString(ITextComponent.Serializer.componentToJson(p)));
             page++;
         }
 
         if (FastTravelConfig.INSTANCE.getBool("enablePrivateList")) {
-            p = new ChatComponentText("");
+            p = new TextComponentString("");
             p.appendSibling(backButton);
             i = 0;
             if (Users.getUserByName(player.getDisplayNameString()).getLocations().size() > 0) {
@@ -276,25 +279,25 @@ public class CommandFastTravel extends CommandK4Base {
                     p = p.appendSibling(parseEntry(entry.getKey()));
 
                     if (i == 13) {
-                        tList.appendTag(new NBTTagString(IChatComponent.Serializer.componentToJson(p)));
+                        tList.appendTag(new NBTTagString(ITextComponent.Serializer.componentToJson(p)));
                         i = 0;
-                        p = new ChatComponentText("");
+                        p = new TextComponentString("");
                         p.appendSibling(backButton);
                     }
                 }
             } else {
-                p.appendSibling(new ChatComponentText(EnumChatFormatting.RESET + "No locations defined yet."));
+                p.appendSibling(new TextComponentString(TextFormatting.RESET + "No locations defined yet."));
             }
             if (i < 13) {
-                tList.appendTag(new NBTTagString(IChatComponent.Serializer.componentToJson(p)));
+                tList.appendTag(new NBTTagString(ITextComponent.Serializer.componentToJson(p)));
             }
 
-            privateListLink.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.CHANGE_PAGE, "" + page));
+            privateListLink.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.CHANGE_PAGE, "" + page));
 
             page1.appendSibling(privateListLink);
         }
 
-        tList.set(0, new NBTTagString(IChatComponent.Serializer.componentToJson(page1)));
+        tList.set(0, new NBTTagString(ITextComponent.Serializer.componentToJson(page1)));
 
         tCompound.setTag("pages", tList);
 
@@ -307,11 +310,11 @@ public class CommandFastTravel extends CommandK4Base {
         }
     }
 
-    private IChatComponent parseEntry(String key) {
-        IChatComponent chatComponent = new ChatComponentText(key + "\n");
-        chatComponent.getChatStyle().setColor(EnumChatFormatting.DARK_BLUE);
-        chatComponent.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/travel " + key));
-        chatComponent.getChatStyle().setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("Click to travel")));
+    private ITextComponent parseEntry(String key) {
+        ITextComponent chatComponent = new TextComponentString(key + "\n");
+        chatComponent.getStyle().setColor(TextFormatting.DARK_BLUE);
+        chatComponent.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/travel " + key));
+        chatComponent.getStyle().setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponentString("Click to travel")));
 
         return chatComponent;
     }
