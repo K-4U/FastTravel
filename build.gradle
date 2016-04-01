@@ -35,7 +35,11 @@ version = project.ext.mcVersion + "-1.0." + project.ext.buildNum
 group= "k4unl.minecraft.fastTravel" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "fastTravel"
 
-
+allprojects {
+    apply plugin: 'java'
+    sourceCompatibility = 1.7
+    targetCompatibility = 1.7
+}
 
 minecraft {
     version = "${project.ext.mcVersion}-12.16.0.1816-1.9"
