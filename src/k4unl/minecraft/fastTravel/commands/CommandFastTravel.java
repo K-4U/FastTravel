@@ -182,10 +182,10 @@ public class CommandFastTravel extends CommandK4Base {
     private void spawnBook(EntityPlayer player) {
         //Search the players current held item for the book.
         boolean foundBook = false;
-        ItemStack book = new ItemStack(Items.written_book, 1);
+        ItemStack book = new ItemStack(Items.WRITTEN_BOOK, 1);
         NBTTagCompound tCompound = new NBTTagCompound();
         if (player.getHeldItem(EnumHand.MAIN_HAND) != null) {
-            if (player.getHeldItem(EnumHand.MAIN_HAND).getItem() == Items.written_book) {
+            if (player.getHeldItem(EnumHand.MAIN_HAND).getItem() == Items.WRITTEN_BOOK) {
 
                 //Find the NBT:
                 tCompound = player.getHeldItem(EnumHand.MAIN_HAND).getTagCompound();
