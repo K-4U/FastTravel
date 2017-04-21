@@ -29,13 +29,13 @@ public class CommandTravel extends CommandK4Base {
     }
 
     @Override
-    public String getCommandName() {
+    public String getName() {
 
         return "travel";
     }
 
     @Override
-    public String getCommandUsage(ICommandSender sender) {
+    public String getUsage(ICommandSender sender) {
 
         return "travel <location>";
     }
@@ -47,7 +47,7 @@ public class CommandTravel extends CommandK4Base {
             String tag = Joiner.on(" ").join(args);
             
             if (!FastTravel.instance.locations.containsKey(tag) && !Users.getUserByName(sender.getName()).getLocations().containsKey(tag)) {
-                sender.addChatMessage(new TextComponentString(TextFormatting.RED + "Location does not exist"));
+                sender.sendMessage(new TextComponentString(TextFormatting.RED + "Location does not exist"));
             }else{
                 Location target;
                 if(FastTravel.instance.locations.containsKey(tag)){
@@ -67,7 +67,7 @@ public class CommandTravel extends CommandK4Base {
                     EntityPlayer player = (EntityPlayer) sender.getCommandSenderEntity();
 
                     if (player.experienceTotal < experienceCost) {
-                        sender.addChatMessage(new TextComponentString(TextFormatting.RED + "You don't have enough experience to make this "
+                        sender.sendMessage(new TextComponentString(TextFormatting.RED + "You don't have enough experience to make this "
                           + "journey"));
                         return;
                     }
@@ -92,11 +92,11 @@ public class CommandTravel extends CommandK4Base {
                     sender.getEntityWorld().spawnParticle(EnumParticleTypes.SMOKE_NORMAL, x + .5F, y + .5F, z + .5F, dx, dy, dz);
                 }
 
-                sender.addChatMessage(new TextComponentString(TextFormatting.GRAY + "Woosh"));
+                sender.sendMessage(new TextComponentString(TextFormatting.GRAY + "Woosh"));
             }
 
         } else {
-            sender.addChatMessage(new TextComponentString(TextFormatting.RED + "Usage: /travel <location>"));
+            sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /travel <location>"));
         }
     }
 }

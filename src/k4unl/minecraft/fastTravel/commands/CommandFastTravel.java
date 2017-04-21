@@ -39,13 +39,13 @@ public class CommandFastTravel extends CommandK4Base {
     }
     
     @Override
-    public String getCommandName() {
+    public String getName() {
         
         return "fasttravel";
     }
     
     @Override
-    public String getCommandUsage(ICommandSender sender) {
+    public String getUsage(ICommandSender sender) {
         
         String result = "fasttravel version";
         boolean isOpped = sender.getName().equals("Server") || Functions.isPlayerOpped(((EntityPlayerMP) sender).getGameProfile());
@@ -79,77 +79,77 @@ public class CommandFastTravel extends CommandK4Base {
             args_.remove(args[0]);
             String tag = Joiner.on(" ").join(args_);
             if (args[0].toLowerCase().equals("version")) {
-                sender.addChatMessage(new TextComponentString("Fast Travel version " + ModInfo.VERSION));
+                sender.sendMessage(new TextComponentString("Fast Travel version " + ModInfo.VERSION));
             } else if (args[0].toLowerCase().equals("save")) {
                 if (isOpped) {
                     Users.saveToFile(DimensionManager.getCurrentSaveRootDirectory());
                     FastTravel.instance.saveLocationsToFile(DimensionManager.getCurrentSaveRootDirectory());
                     
-                    sender.addChatMessage(new TextComponentString("Locations and user settings saved to world dir!"));
+                    sender.sendMessage(new TextComponentString("Locations and user settings saved to world dir!"));
                 }
             } else if (args[0].toLowerCase().equals("load")) {
                 if (isOpped) {
                     Users.readFromFile(DimensionManager.getCurrentSaveRootDirectory());
                     FastTravel.instance.readLocationsFile(DimensionManager.getCurrentSaveRootDirectory());
                     
-                    sender.addChatMessage(new TextComponentString("Locations and user settings loaded from world dir!"));
+                    sender.sendMessage(new TextComponentString("Locations and user settings loaded from world dir!"));
                 }
             } else if (args[0].toLowerCase().equals("list")) {
                 for (Map.Entry<String, Location> entry : FastTravel.instance.locations.entrySet()) {
-                    sender.addChatMessage(new TextComponentString("- " + entry.getKey()));
+                    sender.sendMessage(new TextComponentString("- " + entry.getKey()));
                 }
             } else if (args[0].toLowerCase().equals("listprivate")) {
                 if (FastTravelConfig.INSTANCE.getBool("enablePrivateList")) {
                     for (Map.Entry<String, Location> entry : Users.getUserByName(sender.getName()).getLocations().entrySet()) {
-                        sender.addChatMessage(new TextComponentString("- " + entry.getKey()));
+                        sender.sendMessage(new TextComponentString("- " + entry.getKey()));
                     }
                 }
             } else if (args[0].toLowerCase().equals("set")) {
                 if ((FastTravelConfig.INSTANCE.getBool("masterListForOpOnly") && !isOpped)) {
-                    sender.addChatMessage(new TextComponentString(TextFormatting.RED + "You do not have permission to use this command."));
+                    sender.sendMessage(new TextComponentString(TextFormatting.RED + "You do not have permission to use this command."));
                     return;
                 }
                 if (args.length >= 2) {
                     FastTravel.instance.locations.put(tag, new Location(sender.getPosition()));
-                    sender.addChatMessage(new TextComponentString(TextFormatting.GREEN + "Location " + tag + " saved!"));
+                    sender.sendMessage(new TextComponentString(TextFormatting.GREEN + "Location " + tag + " saved!"));
                 } else {
-                    sender.addChatMessage(new TextComponentString(TextFormatting.RED + "Usage: /fasttravel set <name>"));
+                    sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /fasttravel set <name>"));
                 }
             } else if (args[0].toLowerCase().equals("setprivate")) {
                 if (FastTravelConfig.INSTANCE.getBool("enablePrivateList")) {
                     if (args.length >= 2) {
                         Users.getUserByName(sender.getName()).addLocation(tag, new Location(sender.getPosition()));
-                        sender.addChatMessage(new TextComponentString(TextFormatting.GREEN + "Location " + tag + " saved!"));
+                        sender.sendMessage(new TextComponentString(TextFormatting.GREEN + "Location " + tag + " saved!"));
                     } else {
-                        sender.addChatMessage(new TextComponentString(TextFormatting.RED + "Usage: /fasttravel setprivate <name>"));
+                        sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /fasttravel setprivate <name>"));
                     }
                 }
             } else if (args[0].toLowerCase().equals("del")) {
                 if ((FastTravelConfig.INSTANCE.getBool("masterListForOpOnly") && !isOpped)) {
-                    sender.addChatMessage(new TextComponentString(TextFormatting.RED + "You do not have permission to use this command."));
+                    sender.sendMessage(new TextComponentString(TextFormatting.RED + "You do not have permission to use this command."));
                     return;
                 }
                 if (args.length >= 2) {
                     if (FastTravel.instance.locations.containsKey(tag)) {
                         FastTravel.instance.locations.remove(tag);
-                        sender.addChatMessage(new TextComponentString(TextFormatting.GREEN + "Location removed"));
+                        sender.sendMessage(new TextComponentString(TextFormatting.GREEN + "Location removed"));
                     } else {
-                        sender.addChatMessage(new TextComponentString(TextFormatting.RED + "This location does not exist"));
+                        sender.sendMessage(new TextComponentString(TextFormatting.RED + "This location does not exist"));
                     }
                 } else {
-                    sender.addChatMessage(new TextComponentString(TextFormatting.RED + "Usage: /fasttravel del <name>"));
+                    sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /fasttravel del <name>"));
                 }
             } else if (args[0].toLowerCase().equals("delprivate")) {
                 if (FastTravelConfig.INSTANCE.getBool("enablePrivateList")) {
                     if (args.length >= 2) {
                         if (Users.getUserByName(sender.getName()).getLocations().containsKey(tag)) {
                             Users.getUserByName(sender.getName()).removeLocation(tag);
-                            sender.addChatMessage(new TextComponentString(TextFormatting.GREEN + "Location removed"));
+                            sender.sendMessage(new TextComponentString(TextFormatting.GREEN + "Location removed"));
                         } else {
-                            sender.addChatMessage(new TextComponentString(TextFormatting.RED + "This location does not exist"));
+                            sender.sendMessage(new TextComponentString(TextFormatting.RED + "This location does not exist"));
                         }
                     } else {
-                        sender.addChatMessage(new TextComponentString(TextFormatting.RED + "Usage: /fasttravel del <name>"));
+                        sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /fasttravel del <name>"));
                     }
                 }
             } else if (args[0].toLowerCase().equals("book")) {
@@ -158,13 +158,13 @@ public class CommandFastTravel extends CommandK4Base {
                 }
             }
         } else {
-            sender.addChatMessage(new TextComponentString("Usage: " + getCommandUsage(sender)));
+            sender.sendMessage(new TextComponentString("Usage: " + getUsage(sender)));
         }
     }
     
     
     @Override
-    public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos pos) {
+    public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos pos) {
         
         List<String> ret = new ArrayList<>();
         
@@ -308,9 +308,9 @@ public class CommandFastTravel extends CommandK4Base {
         book.setTagCompound(tCompound);
         
         if (!foundBook) {
-            EntityItem EItem = new EntityItem(player.worldObj, player.getPosition().getX(), player.getPosition().getY(), player.getPosition().getZ(),
+            EntityItem EItem = new EntityItem(player.getEntityWorld(), player.getPosition().getX(), player.getPosition().getY(), player.getPosition().getZ(),
                     book);
-            player.worldObj.spawnEntityInWorld(EItem);
+            player.getEntityWorld().spawnEntity(EItem);
         }
     }
     
