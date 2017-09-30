@@ -277,8 +277,8 @@ public class CommandFastTravel extends CommandK4Base {
             p = new TextComponentString("");
             p.appendSibling(backButton);
             i = 0;
-            if (Users.getUserByName(player.getDisplayNameString()).getLocations().size() > 0) {
-                for (Map.Entry<String, Location> entry : Users.getUserByName(player.getDisplayNameString()).getLocations().entrySet()) {
+            if (Users.getUserByName(player.getName()).getLocations().size() > 0) {
+                for (Map.Entry<String, Location> entry : Users.getUserByName(player.getName()).getLocations().entrySet()) {
                     i++;
                     p = p.appendSibling(parseEntry(entry.getKey()));
                     
